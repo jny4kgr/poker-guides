@@ -1,0 +1,103 @@
+{
+ "_note": "until(終了日)を過ぎていないシリーズは毎朝公式から取り直してページを作り直す。fetch が無いものは作成時点のページのまま。rate は円換算の基準(毎朝取り直し、取れなければこの値)",
+ "series": [
+  {
+   "dir": "apt-jeju-2026",
+   "title": "APT Jeju 2026",
+   "venue": "LES A Casino（済州 神話ワールド）",
+   "from": "2026-09-25",
+   "until": "2026-10-07",
+   "currency": "KRW",
+   "rate": 0.11336,
+   "fetch": [
+    "fetch_apt_series.py",
+    "apt-jeju-south-korea-2026",
+    "--title",
+    "APT Jeju 2026",
+    "--venue",
+    "LES A Casino（済州 神話ワールド）",
+    "--tz-hours",
+    "9"
+   ]
+  },
+  {
+   "dir": "wpt-seoul-2026",
+   "title": "WPT Seoul 2026",
+   "venue": "INSPIRE Entertainment Resort（仁川）",
+   "from": "2026-10-30",
+   "until": "2026-11-09",
+   "currency": "KRW",
+   "rate": 0.11336,
+   "fetch": [
+    "fetch_wpt_pokernews.py",
+    "https://www.pokernews.com/news/2026/08/wpt-seoul-2026-schedule-events-new-venue-preview-52175.htm",
+    "--title",
+    "WPT Seoul 2026",
+    "--venue",
+    "INSPIRE Entertainment Resort（仁川）",
+    "--year",
+    "2026",
+    "--main-no",
+    "27"
+   ]
+  },
+  {
+   "dir": "gop-incheon-2026-ii",
+   "title": "Gods of Poker Incheon「The Labyrinth Trail」",
+   "venue": "Paradise City（仁川）",
+   "from": "2026-10-30",
+   "until": "2026-11-08",
+   "currency": "KRW",
+   "rate": 0.11336,
+   "fetch": [
+    "fetch_gop_series.py",
+    "incheon-2026-ii",
+    "--venue",
+    "Paradise City（仁川）"
+   ]
+  },
+  {
+   "dir": "apt-taipei-2026",
+   "title": "APT Championship Taipei 2026",
+   "venue": "Red Space（台北）",
+   "from": "2026-11-12",
+   "until": "2026-11-29",
+   "currency": "TWD",
+   "rate": 4.92863,
+   "fx": {
+    "USD": 31.835
+   },
+   "fetch": [
+    "fetch_apt_series.py",
+    "apt-championship-taipei-2026",
+    "--title",
+    "APT Championship Taipei 2026",
+    "--venue",
+    "Red Space（台北）",
+    "--tz-hours",
+    "8"
+   ]
+  },
+  {
+   "dir": "appt-korea-2026",
+   "title": "APPT Korea 2026",
+   "venue": "Paradise City（仁川）",
+   "from": "2026-09-03",
+   "until": "2026-09-14"
+  },
+  {
+   "dir": "apt-incheon-2026",
+   "title": "APT Incheon 2026",
+   "venue": "Paradise City（仁川）",
+   "from": "2026-08-07",
+   "until": "2026-08-16"
+  },
+  {
+   "dir": "appt-manila-2026",
+   "title": "APPT Manila 2026",
+   "venue": "Okada Manila（Cove Manila）",
+   "from": "2026-08-03",
+   "until": "2026-08-10"
+  }
+ ]
+}
