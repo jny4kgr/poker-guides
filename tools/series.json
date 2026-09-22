@@ -8,7 +8,7 @@
    "from": "2026-09-25",
    "until": "2026-10-07",
    "currency": "KRW",
-   "rate": 0.11347,
+   "rate": 0.11436,
    "fetch": [
     "fetch_apt_series.py",
     "apt-jeju-south-korea-2026",
@@ -27,7 +27,7 @@
    "from": "2026-10-30",
    "until": "2026-11-09",
    "currency": "KRW",
-   "rate": 0.11347,
+   "rate": 0.11436,
    "fetch": [
     "fetch_wpt_pokernews.py",
     "https://www.pokernews.com/news/2026/08/wpt-seoul-2026-schedule-events-new-venue-preview-52175.htm",
@@ -48,7 +48,7 @@
    "from": "2026-10-30",
    "until": "2026-11-08",
    "currency": "KRW",
-   "rate": 0.11347,
+   "rate": 0.11436,
    "fetch": [
     "fetch_gop_series.py",
     "incheon-2026-ii",
@@ -63,7 +63,7 @@
    "from": "2026-11-12",
    "until": "2026-11-29",
    "currency": "TWD",
-   "rate": 4.92927,
+   "rate": 4.95779,
    "fx": {
     "USD": 31.835
    },
