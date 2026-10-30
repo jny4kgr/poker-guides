@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""開催中シリーズのライブ人数を取り直す(GitHub Actions から15分ごとに実行)。
+"""開催中シリーズのライブ人数を取り直す(GitHub Actions のループから10分ごとに実行)。
 
 tools/series.json のうち、Gods of Poker のシリーズで会期中(from〜until。日本時間)のものだけ、
 公式のシリーズページを1回取り、エントリー数・残り人数・平均スタック・進行中のレベルを
@@ -19,15 +19,19 @@ from fetch_gop_series import BASE, get, live_of, series_blocks  # noqa: E402
 JST = dt.timezone(dt.timedelta(hours=9))
 
 
+def active(now: dt.datetime) -> list:
+    """会期中(from〜until の翌日。日本時間)の GOP シリーズ"""
+    cfg = json.loads((TOOLS / "series.json").read_text(encoding="utf-8"))
+    return [s for s in cfg["series"] if (s.get("fetch") or [""])[0] == "fetch_gop_series.py"
+            and dt.date.fromisoformat(s["from"]) <= now.date() <= dt.date.fromisoformat(s["until"]) + dt.timedelta(days=1)]
+
+
 def main() -> None:
     now = dt.datetime.now(JST)
-    cfg = json.loads((TOOLS / "series.json").read_text(encoding="utf-8"))
-    for s in cfg["series"]:
-        fetch = s.get("fetch") or []
-        if not fetch or fetch[0] != "fetch_gop_series.py":
-            continue
-        if not dt.date.fromisoformat(s["from"]) <= now.date() <= dt.date.fromisoformat(s["until"]) + dt.timedelta(days=1):
-            continue
+    if sys.argv[1:] == ["--check"]:  # 会期中のシリーズがあれば終了コード 0(workflow のループ継続判定)
+        sys.exit(0 if active(now) else 1)
+    for s in active(now):
+        fetch = s["fetch"]
         try:
             blocks = series_blocks(get(f"{BASE}/series/{fetch[1]}"))
         except Exception as e:  # noqa: BLE001
