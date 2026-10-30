@@ -52,6 +52,9 @@ def to_page_events(evs: list, rate: float) -> list:
             "buyInKrw": e.get("buyIn"), "buyInJpy": round(e["buyIn"] * rate) if e.get("buyIn") else None,
             "prizePoolKrw": e.get("gtd"), "chips": e.get("stack"), "clock": e.get("levelMin"),
             "note": e.get("buyInNote") or "", "sourceUrl": e.get("url") or "",
+            # 公式ストラクチャーとライブ人数(GOP のみ。無いシリーズは従来どおり分数からの目安表)
+            "levels": e.get("levels"), "lateLv": e.get("lateLv"),
+            "liveId": e.get("liveId"), "live": e.get("live") or None,
         })
     return out
 
@@ -104,11 +107,61 @@ def build_page(data: dict, rate: float, rate_date: str, standalone: bool = False
               f"時刻はすべて現地時間（KST ＝ 日本時間）。円は {sym}1 = ¥{rate}（{rate_date}）換算の目安。<br>"
               f"出典: {sr['sourceLabel']}（{sr.get('fetchedAt', '')} 取得）。"
               "主催は直前まで内容を差し替えます。エントリー前に公式ページで最終確認を。")
+    payload["liveAt"] = sr.get("liveAt", "")
+    doc = add_structure_and_live(doc)
     doc, n = re.subn(r"const DATA_URL=.*?\.catch\(fail\);",
-                     lambda _: "const DATA=" + json.dumps(payload, ensure_ascii=False) + ";\nstart(DATA);",
+                     lambda _: "const DATA=" + json.dumps(payload, ensure_ascii=False) + ";\nstart(DATA);" + LIVE_POLL,
                      doc, count=1, flags=re.S)
     if n != 1:
         sys.exit("テンプレートに fetch ブロックが見つからない")
+    return doc
+
+
+LIVE_CSS = (".live{margin-top:10px;display:flex;flex-wrap:wrap;gap:3px 10px;align-items:baseline;font-size:12px;"
+            "background:#f1f2f4;border-radius:10px;padding:7px 10px;color:var(--muted)}"
+            ".live b{color:var(--ink);font-size:12px}.live.on{background:#e8f6ee;color:#14532d}.live.on b{color:#14532d}"
+            ".sheet .live{margin:0 0 16px;font-size:13px}.live a{margin-left:auto;color:#1a5fb4;font-weight:800}"
+            ".lv-table tr.brk td{background:#f6f6f6;color:var(--muted);font-size:12px}"
+            ".lv-table td.b{font-variant-numeric:tabular-nums;font-weight:800}"
+            ".lv-table td.t{white-space:nowrap}@media(max-width:480px){.lv-table{font-size:12.5px}.lv-table td{padding:7px 4px}}")
+
+# 公式ストラクチャーがあるイベントは、分数からの目安ではなく公式のレベル表(ブラインド・休憩)を出す
+STRUCT_JS = r"""
+function liveLine(e,inSheet){const L=e.live;if(!L||(!L.entries&&!L.running))return '';
+  const st=L.running?(L.paused?'⏸ 一時停止中':'● '+(L.phase||'進行中')):(L.phase||'');
+  const n=L.entries?(!L.running&&e.isContinuation?`Day1 合計 ${fmt.format(L.entries)} entries`:`${fmt.format(L.entries)} entries`)+(L.players?` · 残り ${fmt.format(L.players)}人`:''):'エントリーなし';
+  return `<div class="live ${L.running?'on':''}"><b>${esc(st)}${L.running&&L.lv?` · Lv ${L.lv}`:''}</b><span>${n}${L.running&&L.avg?` · 平均 ${fmt.format(L.avg)}`:''}</span>${inSheet&&state.liveAt?`<span>${esc(state.liveAt)} 時点</span>`:''}</div>`}
+function drawLevels(e,mins){if(!e.levels||!e.levels.length)return drawLevelsEst(e,mins);
+  const box=document.getElementById('lvbox'),hd=box.parentNode.querySelector('.lv-head');
+  if(hd)hd.innerHTML='<strong>ストラクチャー（公式）</strong><span class="lv-empty" style="font-size:11px">BLINDS = SB / BB（ANTE）</span>';
+  const s=toMin(e.start),cr=toMin(e.late),L=e.live&&e.live.running?e.live:null,now=L?null:nowMin(e.date);
+  let prev=null,off=0;const close=cr==null||s==null?null:(cr<s?cr+1440:cr);
+  const rows=e.levels.map(([i,sb,bb,an,m,st])=>{let a=toMin(st);if(prev!=null&&a+off<prev)off+=1440;a+=off;prev=a;const b=a+m;
+    const reg=close!=null?(close>a&&close<=b):(e.lateLv&&i===e.lateLv),isNow=L?(i&&i===L.lv):(now!=null&&now>=a&&now<b);
+    const tags=`${reg?'<span class="tag reg">レジ締切</span>':''}${isNow?'<span class="tag now">NOW</span>':''}`;
+    if(!i)return `<tr class="brk${isNow?' now':''}"><td class="n">BREAK</td><td class="t">${hhmm(a)} – ${hhmm(b)}</td><td>${m}分 ${tags}</td></tr>`;
+    return `<tr class="${reg?'reg':''}${isNow?' now':''}"><td class="n">Lv ${i}</td><td class="t">${hhmm(a)} – ${hhmm(b)}</td><td class="b">${fmt.format(sb)} / ${fmt.format(bb)}${an?` <small>(${fmt.format(an)})</small>`:''} ${tags}</td></tr>`});
+  box.innerHTML=`<table class="lv-table"><tr><th>LEVEL</th><th>TIME</th><th>BLINDS</th></tr>${rows.join('')}</table>
+    <p class="lv-empty" style="margin:10px 0 4px">${e.isContinuation?'継続日のストラクチャーです。':`レジ締切 ${esc(e.late)}${e.lateLv?`（Lv ${e.lateLv} 終了後の休憩まで）`:''}。`}時刻は公式の予定で、進行が押すと後ろにずれます。</p>`}
+"""
+
+LIVE_POLL = r"""
+/* 開催中は live.json(15分ごとに Actions が更新)を読み直して人数を差し替える */
+function applyLive(j){if(!j||!j.events)return;state.events.forEach(e=>{if(e.liveId)e.live=j.events[e.liveId]||null});
+  state.liveAt=j.at||state.liveAt;updated.textContent=`Updated ${DATA.updatedAt} · 人数 ${state.liveAt} 時点`;render();
+  if(state.open){const b=sheetBody.scrollTop;openSheet(state.open.id);sheetBody.scrollTop=b}}
+function pollLive(){fetch('./live.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(applyLive).catch(()=>{})}
+state.liveAt=DATA.liveAt||'';if(DATA.events.some(e=>e.liveId)){pollLive();setInterval(pollLive,120000)}"""
+
+
+def add_structure_and_live(doc: str) -> str:
+    doc = sub(doc, "</style>", LIVE_CSS + "</style>")
+    doc = sub(doc, "function drawLevels(e,mins){", STRUCT_JS + "function drawLevelsEst(e,mins){")
+    doc = sub(doc, '<div class="more">タップで詳細・レベル対応表 ▸</div></article>',
+              "${liveLine(e)}<div class=\"more\">${e.levels?'タップで詳細・ストラクチャー ▸':'タップで詳細・レベル対応表 ▸'}</div></article>")
+    doc = sub(doc, '<div class="lv"><div class="lv-head">', '${liveLine(e,true)}<div class="lv"><div class="lv-head">')
+    doc = sub(doc, ">公式スケジュールで確認 ▸</a>",
+              ">${e.liveId?'GOP 公式でライブ状況を見る ▸':'公式スケジュールで確認 ▸'}</a>")
     return doc
 
 
