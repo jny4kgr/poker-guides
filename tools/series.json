@@ -27,7 +27,7 @@
    "from": "2026-10-30",
    "until": "2026-11-09",
    "currency": "KRW",
-   "rate": 0.118,
+   "rate": 0.11787,
    "fetch": [
     "fetch_wpt_yy.py",
     "wpt-seoul-2026",
@@ -46,7 +46,7 @@
    "from": "2026-10-30",
    "until": "2026-11-08",
    "currency": "KRW",
-   "rate": 0.118,
+   "rate": 0.11787,
    "fetch": [
     "fetch_gop_series.py",
     "incheon-2026-ii",
