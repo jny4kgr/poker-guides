@@ -114,4 +114,18 @@ function applyLive(j){if(!j||!j.events)return;state.events.forEach(e=>{if(e.live
   if(state.open){const b=sheetBody.scrollTop;openSheet(state.open.id);sheetBody.scrollTop=b}}
 function pollLive(){fetch('./live.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(applyLive).catch(()=>{})}
 state.liveAt=DATA.liveAt||'';if(DATA.events.some(e=>e.liveId)){pollLive();setInterval(pollLive,120000)}
+
+/* 大会ごとのリンク: …/#27-1c で該当大会の詳細シートを開く(番号+フライト。番号なしは sat-MMDD-HHMM) */
+function evBase(e){if(!e.eventNo)return `sat-${e.date.slice(5).replace('-','')}-${String(e.start||'').replace(':','')}`;
+  const n=String(e.name||''),f=/Final/i.test(n)?'final':(/(?:Day|Flight)\s*(\w+)/i.exec(n)||[])[1];return f?`${e.eventNo}-${String(f).toLowerCase()}`:String(e.eventNo)}
+let evKeys=null;function evKey(e){if(!evKeys){evKeys=new Map;const seen={};
+  state.events.forEach(x=>{const b=evBase(x);seen[b]=(seen[b]||0)+1;evKeys.set(x,seen[b]>1?`${b}-${seen[b]}`:b)})}return evKeys.get(e)}
+function openFromHash(){const h=decodeURIComponent(location.hash.slice(1)).toLowerCase();if(!h)return;
+  const e=state.events.find(x=>evKey(x)===h);if(!e)return;
+  if(state.date!=='ALL'&&state.date!==e.date){state.date=e.date;dateTabs();render()}
+  const c=app.querySelector(`.event[data-id="${CSS.escape(String(e.id))}"]`);if(c)c.scrollIntoView({block:'center'});openSheet(e.id)}
+{const o=openSheet,c=closeSheet;
+  openSheet=function(id){o(id);const e=state.open;if(e)history.replaceState(null,'','#'+evKey(e))};
+  closeSheet=function(){c();if(location.hash)history.replaceState(null,'',location.pathname+location.search)}}
+addEventListener('hashchange',openFromHash);openFromHash();
 </script></body></html>
