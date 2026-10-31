@@ -29,14 +29,12 @@
    "currency": "KRW",
    "rate": 0.118,
    "fetch": [
-    "fetch_wpt_pokernews.py",
-    "https://www.pokernews.com/news/2026/08/wpt-seoul-2026-schedule-events-new-venue-preview-52175.htm",
+    "fetch_wpt_yy.py",
+    "wpt-seoul-2026",
     "--title",
     "WPT Seoul 2026",
     "--venue",
     "INSPIRE Entertainment Resort（仁川）",
-    "--year",
-    "2026",
     "--main-no",
     "27"
    ]
