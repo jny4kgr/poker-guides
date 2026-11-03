@@ -3,19 +3,28 @@
 共通形式の JSON にする。
 
 PokerNews の記事表と違い、レジ締切(時刻・レベル)・スターティングスタック・1レベルの分数・
-保証額まで入っている。API は認証不要の JSON:
+保証額まで入っている。メインなど一部の大会はブラインド表(structures)もある。API は認証不要の JSON:
 
     https://app.theyypoker.com/api/public/events/<event_id>/schedule
 
     python3 scripts/fetch_wpt_yy.py wpt-seoul-2026 tmp/wpt-seoul-2026/events.json \
-        --title "WPT Seoul 2026" --venue "INSPIRE Entertainment Resort（仁川）" --main-no 27
+        --title "WPT Seoul 2026" --venue "INSPIRE Entertainment Resort（仁川）" --main-no 27 \
+        --somuchpoker https://somuchpoker.com/events-calendar/wpt/2026/wpt-seoul-2026/schedule
+
+--somuchpoker を付けると、終わった大会のエントリー数・賞金総額と進行中の印を SoMuchPoker から重ねる
+(scripts/somuchpoker.py。開催中は tools/live.py が10分ごとに取り直す)。
 """
 import argparse
 import datetime as dt
 import json
 import os
 import re
+import sys
 import urllib.request
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import somuchpoker  # noqa: E402
 
 API = "https://app.theyypoker.com/api/public/events/{}/schedule"
 APP = "https://app.theyypoker.com/?lang=ja"
@@ -56,6 +65,7 @@ def main() -> None:
     ap.add_argument("--venue", required=True)
     ap.add_argument("--main-no", default="", help="メインイベントの Event #(例: 27)")
     ap.add_argument("--input", help="API の代わりに保存済みの JSON を読む(確認用)")
+    ap.add_argument("--somuchpoker", default="", help="SoMuchPoker の日程ページ URL(結果・進行中を重ねる)")
     args = ap.parse_args()
 
     if args.input:
@@ -68,6 +78,8 @@ def main() -> None:
     if not sessions:
         raise SystemExit("YY の日程が空")
 
+    # ブラインド表は Event # ごと。休憩とレベルごとの分数は載っていないので、時刻は開始＋1レベルの分数で出す
+    blinds = {st["event_number"]: st["levels"] for st in data.get("structures") or [] if st.get("levels")}
     events = []
     for s in sorted(sessions, key=lambda x: (x["local_date"], x["local_time"], x.get("event_number") or 999)):
         no = str(s["event_number"]) if s.get("event_number") else ""
@@ -98,6 +110,20 @@ def main() -> None:
             "isMain": bool(args.main_no) and no == args.main_no,
             "officialGame": s.get("game") or "", "url": APP, "stack": stack, "levelMin": clock,
         })
+        lv = blinds.get(s.get("event_number"))
+        if lv and clock and not s.get("continuation"):
+            h, m = map(int, s["local_time"].split(":"))
+            events[-1]["levels"] = [[x["level"], x["small_blind"], x["big_blind"], x.get("ante") or 0, clock,
+                                     f"{(h * 60 + m + i * clock) // 60 % 24:02d}:{(m + i * clock) % 60:02d}"]
+                                    for i, x in enumerate(lv)]
+            events[-1]["levelsEst"] = True
+
+    hit = 0
+    if args.somuchpoker:
+        try:
+            hit = somuchpoker.attach(events, args.somuchpoker)
+        except Exception as e:  # noqa: BLE001  SoMuchPoker が落ちても日程だけは出す
+            print(f"SoMuchPoker 取得失敗: {e}")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     src = data.get("source") or {}
@@ -106,11 +132,12 @@ def main() -> None:
                    "sourceUrl": APP, "sourceLabel": "YY Poker Club アプリ（INSPIRE 公式）",
                    "fetchedAt": dt.date.today().isoformat(),
                    "sourceRevision": src.get("revision"), "sourcePublishedAt": src.get("published_at"),
-                   "lateRegNote": "レジ締切は YY アプリの時刻・レベル"},
+                   "lateRegNote": "レジ締切は YY アプリの時刻・レベル",
+                   "liveAt": dt.datetime.now(dt.timezone(dt.timedelta(hours=9))).strftime("%m/%d %H:%M")},
         "events": events,
     }
     json.dump(payload, open(args.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    print(f"{args.out}: {len(events)} rows")
+    print(f"{args.out}: {len(events)} rows (SoMuchPoker 照合 {hit})")
 
 
 if __name__ == "__main__":
