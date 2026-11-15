@@ -58,6 +58,8 @@ def update_series(s: dict, today: str) -> bool:
     if not data.get("events"):
         print(f"  イベント0件のため更新しない {s['dir']}")
         return False
+    if s.get("tzLabel"):  # 時差の表記(既定は KST ＝ 日本時間)
+        data["series"]["tzLabel"] = s["tzLabel"]
     page = build_page(data, rate, today, standalone=True)
     dest = ROOT / s["dir"] / "index.html"
     dest.parent.mkdir(parents=True, exist_ok=True)

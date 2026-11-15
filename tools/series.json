@@ -76,7 +76,8 @@
     "Red Space（台北）",
     "--tz-hours",
     "8"
-   ]
+   ],
+   "tzLabel": "台湾時間 ＝ 日本時間 −1時間"
   },
   {
    "dir": "appt-korea-2026",
@@ -98,6 +99,16 @@
    "venue": "Okada Manila（Cove Manila）",
    "from": "2026-08-03",
    "until": "2026-08-10"
+  },
+  {
+   "dir": "wpt-prime-taiwan-2027",
+   "title": "WPT Prime Taiwan 2027",
+   "venue": "CTP Poker Club（台湾）",
+   "from": "2027-01-02",
+   "until": "2027-01-11",
+   "currency": "TWD",
+   "rate": 4.85556,
+   "tzLabel": "台湾時間 ＝ 日本時間 −1時間"
   }
  ]
 }

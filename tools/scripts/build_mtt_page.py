@@ -104,7 +104,7 @@ def build_page(data: dict, rate: float, rate_date: str, standalone: bool = False
     doc = sub(doc, "は公式・取得元とも未公開です。毎朝の自動同期で公開をチェックしています${st?`（${esc(st)}）`:''}。",
               "は出典に載っていません。")
     doc = sub(doc, "Schedule data is loaded via Google Sheets. レベル時間は公表分のみ収録。",
-              f"時刻はすべて現地時間（KST ＝ 日本時間）。円は {sym}1 = ¥{rate}（{rate_date}）換算の目安。<br>"
+              f"時刻はすべて現地時間（{sr.get('tzLabel') or 'KST ＝ 日本時間'}）。円は {sym}1 = ¥{rate}（{rate_date}）換算の目安。<br>"
               f"出典: {sr['sourceLabel']}（{sr.get('fetchedAt', '')} 取得）。"
               "主催は直前まで内容を差し替えます。エントリー前に公式ページで最終確認を。")
     payload["liveAt"] = sr.get("liveAt", "")
