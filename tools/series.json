@@ -109,6 +109,70 @@
    "currency": "TWD",
    "rate": 4.85556,
    "tzLabel": "台湾時間 ＝ 日本時間 −1時間"
+  },
+  {
+   "dir": "tmt-21-2027",
+   "title": "TMT 21（Taiwan Millions）",
+   "venue": "Red Space（台北）",
+   "from": "2027-01-13",
+   "until": "2027-02-01",
+   "currency": "TWD",
+   "rate": 4.83284,
+   "tzLabel": "台湾時間 ＝ 日本時間 −1時間",
+   "fetch": [
+    "fetch_ctp_festival.py",
+    "taiwan-millions-tournament-21",
+    "--title",
+    "TMT 21（Taiwan Millions）",
+    "--venue",
+    "Red Space（台北）"
+   ]
+  },
+  {
+   "dir": "apt-jeju-classic-2027",
+   "title": "APT Jeju Classic 2027",
+   "venue": "LES A Casino（済州 神話ワールド）",
+   "from": "2027-01-22",
+   "until": "2027-01-31",
+   "currency": "KRW",
+   "rate": 0.1185,
+   "fetch": [
+    "fetch_apt_series.py",
+    "apt-jeju-classic-south-korea-2027",
+    "--title",
+    "APT Jeju Classic 2027",
+    "--venue",
+    "LES A Casino（済州 神話ワールド）",
+    "--tz-hours",
+    "9"
+   ]
+  },
+  {
+   "dir": "aspt-korea-2027",
+   "title": "ASPT Korea 2027",
+   "venue": "Paradise City（仁川）",
+   "from": "2027-01-22",
+   "until": "2027-01-31",
+   "currency": "KRW",
+   "rate": 0.1185,
+   "fetch": [
+    "fetch_aspt_series.py",
+    "aspt-korea-2027",
+    "--title",
+    "ASPT Korea 2027",
+    "--venue",
+    "Paradise City（仁川）"
+   ]
+  },
+  {
+   "dir": "rdpt-taiwan-2027",
+   "title": "Red Dragon Poker Tour Taiwan 2027",
+   "venue": "Asia Poker Arena（台北）",
+   "from": "2027-02-27",
+   "until": "2027-03-07",
+   "currency": "TWD",
+   "rate": 4.83284,
+   "tzLabel": "台湾時間 ＝ 日本時間 −1時間"
   }
  ]
 }
